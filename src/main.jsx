@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ArrowRight, Check, Flower2, RotateCcw, Share2, Sparkles, Star } from "lucide-react";
 import "./styles.css";
@@ -30,13 +30,33 @@ const qs = [
 function Decor(){return <><div className="grain"/><div className="sparkles">{Array.from({length:30},(_,i)=><i key={i} style={{"--i":i}}>{i%3===0?"✦":i%3===1?"·":"♡"}</i>)}</div><div className="flower fa">✿</div><div className="flower fb">❀</div><div className="flower fc">✽</div></>}
 
 function App(){
- const [started,setStarted]=useState(false),[n,setN]=useState(0),[score,setScore]=useState({}),[result,setResult]=useState(null),[imgs,setImgs]=useState(()=>Object.fromEntries(Object.values(girls).map(x=>[x.id,`https://img.anili.st/${x.id}`]))),[copied,setCopied]=useState(false);
- const start=()=>{setStarted(true);fetchImgs()};
- const fetchImgs=async()=>{try{const ids=Object.values(girls).map(x=>x.id).join(",");const q="query { Page { characters(id_in: ["+ids+"]) { id image { large } } } }";const r=await fetch("https://graphql.anilist.co",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q})});const j=await r.json();const m={...Object.fromEntries(Object.values(girls).map(x=>[x.id,`https://img.anili.st/${x.id}`]))};(j.data?.Page?.characters||[]).forEach(x=>{if(x.image?.large)m[x.id]=x.image.large});setImgs(m)}catch(e){}};
+ const [started,setStarted]=useState(false),[n,setN]=useState(0),[score,setScore]=useState({}),[result,setResult]=useState(null),[imgs,setImgs]=useState({}),[copied,setCopied]=useState(false);
+ const start=()=>setStarted(true);
+ const fetchImgs=async()=>{
+   const m={};
+   try{
+     const ids=Object.values(girls).map(x=>x.id).join(",");
+     const q="query { Page { characters(id_in: ["+ids+"]) { id image { large } } } }";
+     const r=await fetch("https://graphql.anilist.co",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q})});
+     const j=await r.json();
+     (j.data?.Page?.characters||[]).forEach(x=>{if(x.image?.large)m[x.id]=x.image.large});
+   }catch(e){}
+   for(const girl of Object.values(girls)){
+     if(m[girl.id]) continue;
+     try{
+       const r=await fetch("https://api.jikan.moe/v4/characters?q="+encodeURIComponent(girl.name)+"&limit=1");
+       const j=await r.json();
+       const image=j.data?.[0]?.images?.jpg?.large_image_url || j.data?.[0]?.images?.jpg?.image_url;
+       if(image)m[girl.id]=image;
+     }catch(e){}
+   }
+   setImgs(m);
+ };
+ useEffect(()=>{fetchImgs()},[]);
  const pick=k=>{const s={...score,[k]:(score[k]||0)+1};setScore(s);if(n===qs.length-1){const key=Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0];setResult(girls[key])}else setN(n+1)};
  const reset=()=>{setStarted(false);setN(0);setScore({});setResult(null);setCopied(false)};
  const share=async()=>{const text="I got "+result.name+" on AniSona ♡ "+result.tag;if(navigator.share) await navigator.share({title:"My AniSona result",text,url:location.href}).catch(()=>{});else{await navigator.clipboard?.writeText(text+" — "+location.href);setCopied(true);setTimeout(()=>setCopied(false),1600)}};
- if(result)return <main className="app"><Decor/><div className="result-wrap"><div className="result-top"><b>ANISONA ♡</b><span><Sparkles size={13}/> YOUR RESULT</span></div><section className="result-card"><div className="result-art">{imgs[result.id]?<img src={imgs[result.id]} alt={result.name}/>:<div className="fallback"><Flower2 size={65}/>{result.name.split(" ")[0]}</div>}<div className="shine"/><strong>★ IT GIRL ★</strong></div><div className="result-copy"><p className="eyebrow">THE ANIME GIRL WHO DESCRIBES YOU MOST</p><h1>{result.name}</h1><div className="anime">{result.anime} · {result.tag}</div><p>{result.desc}</p><div className="traits">{result.traits.map(x=><span key={x}>{x}</span>)}</div></div></section><div className="actions"><button className="start-btn" onClick={share}>{copied?<Check/>:<Share2/>}{copied?"Copied!":"Share my result"}</button><button className="ghost" onClick={reset}><RotateCcw/> Take it again</button></div><footer>Made for the girls who romanticize everything ✿</footer></div></main>;
+ if(result)return <main className="app"><Decor/><div className="result-wrap"><div className="result-top"><b>ANISONA ♡</b><span><Sparkles size={13}/> YOUR RESULT</span></div><section className="result-card"><div className="result-art">{imgs[result.id]?<img src={imgs[result.id]} alt={result.name} onError={e=>{e.currentTarget.style.display="none";e.currentTarget.nextElementSibling?.classList.add("show")}}/>:<div className="fallback show"><Flower2 size={65}/>{result.name.split(" ")[0]}</div>}<div className="shine"/><strong>★ IT GIRL ★</strong></div><div className="result-copy"><p className="eyebrow">THE ANIME GIRL WHO DESCRIBES YOU MOST</p><h1>{result.name}</h1><div className="anime">{result.anime} · {result.tag}</div><p>{result.desc}</p><div className="traits">{result.traits.map(x=><span key={x}>{x}</span>)}</div></div></section><div className="actions"><button className="start-btn" onClick={share}>{copied?<Check/>:<Share2/>}{copied?"Copied!":"Share my result"}</button><button className="ghost" onClick={reset}><RotateCcw/> Take it again</button></div><footer>Made for the girls who romanticize everything ✿</footer></div></main>;
  if(started){const q=qs[n],pct=((n+1)/qs.length)*100;return <main className="app"><Decor/><div className="quiz"><header><button onClick={reset}>♡ ANISONA</button><span>{String(n+1).padStart(2,"0")} / 10</span></header><div className="progress"><div style={{width:pct+"%"}}/></div><section className="question"><Sparkles className="qspark"/><p className="eyebrow">QUESTION {n+1}</p><h2>{q[0]}</h2><div className="answers">{q[1].map(([t,k],i)=><button key={t} onClick={()=>pick(k)}><em>0{i+1}</em><span>{t}</span><ArrowRight/></button>)}</div></section><div className="qfoot"><span>♡ trust your first instinct</span><span>{Math.round(pct)}% complete</span></div></div></main>}
  return <main className="app home"><Decor/><div className="hero"><div className="pill"><Sparkles size={14}/> A LITTLE TEST FOR THE GIRLS</div><div className="bow">୨୧</div><h1>Which anime girl<br/><em>describes you?</em></h1><p>Your personality. Your energy. Your main-character moment.<br/>Answer a few questions and meet your anime twin. ♡</p><button className="start-btn" onClick={start}>Find my anime girl <ArrowRight/></button><small><Star size={12} fill="currentColor"/> 10 questions · 8 iconic girls · 100% vibes</small></div><div className="float one">🎀 <b>pretty & powerful</b></div><div className="float two">✦ <b>main character energy</b></div><div className="float three">🌸 <b>soft girl supremacy</b></div><div className="ribbon">♡ ANISONA　♡ FIND YOUR ANIME GIRL　♡ ANISONA　♡</div></main>
 }
