@@ -1,0 +1,43 @@
+import React, { useState } from "react";
+import { createRoot } from "react-dom/client";
+import { ArrowRight, Check, Flower2, RotateCcw, Share2, Sparkles, Star } from "lucide-react";
+import "./styles.css";
+
+const girls = {
+  marin:{name:"Marin Kitagawa",anime:"My Dress-Up Darling",tag:"The bubbly trendsetter",desc:"You’re expressive, confident, affectionate, and never afraid to love what you love. You bring main-character energy wherever you go.",traits:["Confident","Playful","Passionate","Social"],id:126287},
+  yor:{name:"Yor Forger",anime:"SPY x FAMILY",tag:"The sweet secret weapon",desc:"Soft and elegant one second, terrifyingly capable the next. You care deeply, even when you don’t always know how to say it.",traits:["Caring","Elegant","Strong","Loyal"],id:118305},
+  power:{name:"Power",anime:"Chainsaw Man",tag:"The chaotic icon",desc:"You have zero interest in being ordinary. Loud, hilarious, dramatic and weirdly lovable — your confidence enters the room before you do.",traits:["Chaotic","Bold","Funny","Fearless"],id:127103},
+  nobara:{name:"Nobara Kugisaki",anime:"Jujutsu Kaisen",tag:"The unapologetic baddie",desc:"You know your worth and refuse to shrink yourself for anyone. Your style is sharp and your standards are higher.",traits:["Independent","Stylish","Fierce","Honest"],id:126729},
+  asuka:{name:"Asuka Langley",anime:"Neon Genesis Evangelion",tag:"The competitive queen",desc:"Ambitious, intense, and secretly much softer than your attitude lets on. You want to stand out — and usually do.",traits:["Ambitious","Intense","Driven","Proud"],id:14620},
+  sailor:{name:"Usagi Tsukino",anime:"Sailor Moon",tag:"The sparkly sweetheart",desc:"You feel everything at 200%, but that huge heart is your superpower. Emotional, loyal, silly, and always there when people need you.",traits:["Loving","Dreamy","Loyal","Goofy"],id:1438},
+  nana:{name:"Nana Osaki",anime:"NANA",tag:"The cool-girl rebel",desc:"Independent and magnetic, with a strong sense of self. You’d rather be authentic than liked, and people remember you because of it.",traits:["Independent","Cool","Passionate","Magnetic"],id:1380},
+  mitsuri:{name:"Mitsuri Kanroji",anime:"Demon Slayer",tag:"The pink-hearted lover",desc:"Affectionate, enthusiastic, and full of warmth. You see beauty in people and things and never apologize for having a huge heart.",traits:["Sweet","Romantic","Optimistic","Warm"],id:127230}
+};
+
+const qs = [
+["It’s Saturday. What’s the move?",[["Shopping, selfies, and a cute café","marin"],["A cozy day with my favorite people","yor"],["Whatever causes the most chaos","power"],["Getting dressed up somewhere iconic","nobara"]]],
+["Pick your energy.",[["✨ I’m the moment.","marin"],["🎀 Soft but secretly lethal.","yor"],["💥 Unhinged, obviously.","power"],["💋 Don’t underestimate me.","nobara"]]],
+["Someone underestimates you. You…",[["Smile and prove them wrong.","asuka"],["Stay calm. They’ll find out.","yor"],["Make it everyone’s problem.","power"],["Give them one look and keep walking.","nana"]]],
+["Your dream aesthetic is basically…",[["Pink, glitter, bows & glossy lips","marin"],["Romantic, elegant, pretty","mitsuri"],["Black, edgy, effortless","nana"],["Y2K baddie with attitude","nobara"]]],
+["Choose a compliment.",[["“You make everything more fun.”","marin"],["“You have such a beautiful heart.”","mitsuri"],["“You’re impossible to forget.”","nana"],["“You’re terrifyingly talented.”","asuka"]]],
+["When you catch feelings…",[["I become the biggest hopeless romantic.","mitsuri"],["I act normal. I am NOT normal.","yor"],["I deny it until the evidence is overwhelming.","asuka"],["I flirt. Life is too short.","marin"]]],
+["Pick a signature accessory.",[["A giant bow 🎀","sailor"],["Statement earrings ✨","nobara"],["A cute pink hair accessory 🌸","mitsuri"],["Something effortlessly cool 🖤","nana"]]],
+["What do your friends call you?",[["The therapist / mom friend","yor"],["The chaotic one","power"],["The fashion girl","marin"],["The one who always has a plan","asuka"]]],
+["Your biggest flex?",[["I can make friends anywhere.","sailor"],["I know exactly who I am.","nana"],["I work ridiculously hard.","asuka"],["I love people loudly and genuinely.","mitsuri"]]],
+["Final question. Choose your wallpaper vibe.",[["Pink chrome + hearts + glitter","marin"],["Moonlight + flowers + ribbons","sailor"],["Cherry red + black + attitude","nobara"],["Pastel pink + dreamy sparkles","mitsuri"]]]
+];
+
+function Decor(){return <><div className="grain"/><div className="sparkles">{Array.from({length:30},(_,i)=><i key={i} style={{"--i":i}}>{i%3===0?"✦":i%3===1?"·":"♡"}</i>)}</div><div className="flower fa">✿</div><div className="flower fb">❀</div><div className="flower fc">✽</div></>}
+
+function App(){
+ const [started,setStarted]=useState(false),[n,setN]=useState(0),[score,setScore]=useState({}),[result,setResult]=useState(null),[imgs,setImgs]=useState({}),[copied,setCopied]=useState(false);
+ const start=()=>{setStarted(true);fetchImgs()};
+ const fetchImgs=async()=>{try{const ids=Object.values(girls).map(x=>x.id).join(",");const q="query { Page { characters(id_in: ["+ids+"]) { id image { large } } } }";const r=await fetch("https://graphql.anilist.co",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q})});const j=await r.json();const m={};(j.data.Page.characters||[]).forEach(x=>m[x.id]=x.image.large);setImgs(m)}catch(e){}};
+ const pick=k=>{const s={...score,[k]:(score[k]||0)+1};setScore(s);if(n===qs.length-1){const key=Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0];setResult(girls[key])}else setN(n+1)};
+ const reset=()=>{setStarted(false);setN(0);setScore({});setResult(null);setCopied(false)};
+ const share=async()=>{const text="I got "+result.name+" on AniSona ♡ "+result.tag;if(navigator.share) await navigator.share({title:"My AniSona result",text,url:location.href}).catch(()=>{});else{await navigator.clipboard?.writeText(text+" — "+location.href);setCopied(true);setTimeout(()=>setCopied(false),1600)}};
+ if(result)return <main className="app"><Decor/><div className="result-wrap"><div className="result-top"><b>ANISONA ♡</b><span><Sparkles size={13}/> YOUR RESULT</span></div><section className="result-card"><div className="result-art">{imgs[result.id]?<img src={imgs[result.id]} alt={result.name}/>:<div className="fallback"><Flower2 size={65}/>{result.name.split(" ")[0]}</div>}<div className="shine"/><strong>★ IT GIRL ★</strong></div><div className="result-copy"><p className="eyebrow">THE ANIME GIRL WHO DESCRIBES YOU MOST</p><h1>{result.name}</h1><div className="anime">{result.anime} · {result.tag}</div><p>{result.desc}</p><div className="traits">{result.traits.map(x=><span key={x}>{x}</span>)}</div></div></section><div className="actions"><button className="start-btn" onClick={share}>{copied?<Check/>:<Share2/>}{copied?"Copied!":"Share my result"}</button><button className="ghost" onClick={reset}><RotateCcw/> Take it again</button></div><footer>Made for the girls who romanticize everything ✿</footer></div></main>;
+ if(started){const q=qs[n],pct=((n+1)/qs.length)*100;return <main className="app"><Decor/><div className="quiz"><header><button onClick={reset}>♡ ANISONA</button><span>{String(n+1).padStart(2,"0")} / 10</span></header><div className="progress"><div style={{width:pct+"%"}}/></div><section className="question"><Sparkles className="qspark"/><p className="eyebrow">QUESTION {n+1}</p><h2>{q[0]}</h2><div className="answers">{q[1].map(([t,k],i)=><button key={t} onClick={()=>pick(k)}><em>0{i+1}</em><span>{t}</span><ArrowRight/></button>)}</div></section><div className="qfoot"><span>♡ trust your first instinct</span><span>{Math.round(pct)}% complete</span></div></div></main>}
+ return <main className="app home"><Decor/><div className="hero"><div className="pill"><Sparkles size={14}/> A LITTLE TEST FOR THE GIRLS</div><div className="bow">୨୧</div><h1>Which anime girl<br/><em>describes you?</em></h1><p>Your personality. Your energy. Your main-character moment.<br/>Answer a few questions and meet your anime twin. ♡</p><button className="start-btn" onClick={start}>Find my anime girl <ArrowRight/></button><small><Star size={12} fill="currentColor"/> 10 questions · 8 iconic girls · 100% vibes</small></div><div className="float one">🎀 <b>pretty & powerful</b></div><div className="float two">✦ <b>main character energy</b></div><div className="float three">🌸 <b>soft girl supremacy</b></div><div className="ribbon">♡ ANISONA　♡ FIND YOUR ANIME GIRL　♡ ANISONA　♡</div></main>
+}
+createRoot(document.getElementById("root")).render(<App/>);
