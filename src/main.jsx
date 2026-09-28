@@ -27,7 +27,7 @@ const qs = [
 ["Final question. Choose your wallpaper vibe.",[["Pink chrome + hearts + glitter","marin"],["Moonlight + flowers + ribbons","sailor"],["Cherry red + black + attitude","nobara"],["Pastel pink + dreamy sparkles","mitsuri"]]]
 ];
 
-function Decor(){return <><div className="grain"/><div className="sparkles">{Array.from({length:30},(_,i)=><i key={i} style={{"--i":i}}>{i%3===0?"✦":i%3===1?"·":"♡"}</i>)}</div><div className="flower fa">✿</div><div className="flower fb">❀</div><div className="flower fc">✽</div></>}
+function Decor(){return <><div className="grain"/><div className="sparkles">{Array.from({length:48},(_,i)=><i key={i} style={{"--i":i}}>{i%4===0?"✦":i%4===1?"✧":i%4===2?"⋆":"♡"}</i>)}</div><div className="bow-decor bow-left"><span/><b>♡</b><span/></div><div className="bow-decor bow-right"><span/><b>♡</b><span/></div><div className="bow-decor bow-mini"><span/><b>♡</b><span/></div><div className="flower fa">✿</div><div className="flower fb">❀</div><div className="flower fc">✽</div><div className="flower fd">✾</div></>}
 
 function App(){
  const [started,setStarted]=useState(false),[n,setN]=useState(0),[score,setScore]=useState({}),[result,setResult]=useState(null),[imgs,setImgs]=useState({}),[copied,setCopied]=useState(false);
